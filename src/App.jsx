@@ -24,8 +24,19 @@ import {
   Trash2
 } from "lucide-react";
 
-import { getRecipes, getCurrentUser, deleteRecipeApi } from "./api.js";
-import { readSaved, writeSaved, readAuth, writeAuth } from "./storage.js";
+import {
+  getRecipes,
+  getCurrentUser,
+  deleteRecipeApi
+} from "./api.js";
+
+import {
+  readSaved,
+  writeSaved,
+  readAuth,
+  writeAuth
+} from "./storage.js";
+
 import { filterRecipes } from "./recipe-utils.js";
 import Planner from "./Planner.jsx";
 import AuthModal from "./AuthModal.jsx";
@@ -123,7 +134,14 @@ function RecipeCard({ recipe, saved, onSave, onOpen, onPlan }) {
   );
 }
 
-function RecipeDetails({ recipe, onClose, onPlan, onEdit, onDelete, canManage }) {
+function RecipeDetails({
+  recipe,
+  onClose,
+  onPlan,
+  onEdit,
+  onDelete,
+  canManage
+}) {
   const dialogRef = useRef(null);
   const [step, setStep] = useState(0);
   const [checked, setChecked] = useState([]);
@@ -301,6 +319,7 @@ function RecipeDetails({ recipe, onClose, onPlan, onEdit, onDelete, canManage })
               >
                 <Edit3 size={15} /> Edit Recipe
               </button>
+
               <button
                 type="button"
                 className="remove-button"
@@ -382,12 +401,19 @@ export default function App() {
   const [auth, setAuth] = useState(() => readAuth());
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  const [recipeFormOpen, setRecipeFormOpen] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState(null);
+  const [myRecipesOnly, setMyRecipesOnly] = useState(false);
+
   useEffect(() => {
     if (auth.token) {
       getCurrentUser(auth.token)
         .then((verifiedUser) => {
           if (verifiedUser) {
-            setAuth((curr) => ({ ...curr, user: verifiedUser }));
+            setAuth((current) => ({
+              ...current,
+              user: verifiedUser
+            }));
             writeAuth(auth.token, verifiedUser);
           } else {
             setAuth({ token: null, user: null });
@@ -409,16 +435,13 @@ export default function App() {
     setMyRecipesOnly(false);
   }
 
-  const [recipeFormOpen, setRecipeFormOpen] = useState(false);
-  const [editingRecipe, setEditingRecipe] = useState(null);
-  const [myRecipesOnly, setMyRecipesOnly] = useState(false);
-
   function handleOpenCreateRecipe() {
     if (!auth.user) {
       setAuthModalOpen(true);
       setToast("Please sign in to add your own recipes.");
       return;
     }
+
     setEditingRecipe(null);
     setRecipeFormOpen(true);
   }
@@ -430,11 +453,14 @@ export default function App() {
 
   function handleRecipeSaved(savedRecipe, action) {
     if (action === "create") {
-      setRecipes((prev) => [savedRecipe, ...prev]);
+      setRecipes((previous) => [savedRecipe, ...previous]);
     } else {
-      setRecipes((prev) =>
-        prev.map((r) => (r.id === savedRecipe.id ? savedRecipe : r))
+      setRecipes((previous) =>
+        previous.map((recipe) =>
+          recipe.id === savedRecipe.id ? savedRecipe : recipe
+        )
       );
+
       if (selectedRecipe?.id === savedRecipe.id) {
         setSelectedRecipe(savedRecipe);
       }
@@ -443,20 +469,27 @@ export default function App() {
 
   async function handleDeleteRecipe(recipe) {
     if (!auth.token) return;
+
     const confirmed = window.confirm(
       `Are you sure you want to delete "${recipe.name}"?`
     );
+
     if (!confirmed) return;
 
     try {
       await deleteRecipeApi(recipe.id, auth.token);
-      setRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
+
+      setRecipes((previous) =>
+        previous.filter((item) => item.id !== recipe.id)
+      );
+
       if (selectedRecipe?.id === recipe.id) {
         setSelectedRecipe(null);
       }
+
       setToast(`Deleted "${recipe.name}"`);
-    } catch (err) {
-      setToast(err.message || "Failed to delete recipe");
+    } catch (error) {
+      setToast(error.message || "Failed to delete recipe");
     }
   }
 
@@ -503,6 +536,7 @@ export default function App() {
 
   useEffect(() => {
     if (!toast) return;
+
     const timer = setTimeout(() => setToast(""), 2400);
     return () => clearTimeout(timer);
   }, [toast]);
@@ -522,9 +556,11 @@ export default function App() {
       sort,
       favourites: page === "Favourites" ? favourites : null
     });
+
     if (myRecipesOnly && auth.user) {
-      list = list.filter((r) => r.userId === auth.user.id);
+      list = list.filter((recipe) => recipe.userId === auth.user.id);
     }
+
     return list;
   }, [
     recipes,
@@ -703,7 +739,7 @@ export default function App() {
           {auth.user && (
             <button
               className={myRecipesOnly ? "chip active-chip" : "chip"}
-              onClick={() => setMyRecipesOnly((prev) => !prev)}
+              onClick={() => setMyRecipesOnly((previous) => !previous)}
             >
               <ChefHat size={14} /> My Recipes
             </button>
@@ -713,7 +749,9 @@ export default function App() {
             <button
               key={item}
               className={
-                category === item && !myRecipesOnly ? "chip active-chip" : "chip"
+                category === item && !myRecipesOnly
+                  ? "chip active-chip"
+                  : "chip"
               }
               onClick={() => {
                 setCategory(item);
@@ -796,7 +834,9 @@ export default function App() {
             aria-label={`User profile: ${auth.user.displayName}`}
           >
             <span className="nav-avatar-mini">
-              {auth.user.displayName ? auth.user.displayName[0].toUpperCase() : "U"}
+              {auth.user.displayName
+                ? auth.user.displayName[0].toUpperCase()
+                : "U"}
             </span>
             <span>{auth.user.displayName}</span>
           </button>
@@ -1022,18 +1062,80 @@ export default function App() {
             <div className="eyebrow">
               <span /> YOUR PERSONAL COLLECTION
             </div>
-            <h1>Things you <em>love.</em></h1>
-            <p>Your saved recipes, all together in one place.</p>
+
+            <h1>
+              Things you <em>love.</em>
+            </h1>
+
+            <p>
+              Search your saved recipes by dish name or ingredient.
+            </p>
           </div>
 
+          <div className="filter-row">
+            <label className="search-box">
+              <Search size={18} />
+
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search favourite recipes"
+                placeholder="Search your favourites..."
+              />
+
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Clear favourites search"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </label>
+          </div>
+
+          {!loading && (
+            <p
+              className="result-count"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {filteredRecipes.length} saved{" "}
+              {filteredRecipes.length === 1 ? "recipe" : "recipes"}
+              {query.trim() ? " matching your search" : ""}
+            </p>
+          )}
+
           {loading ? (
-            <p role="status">Loading your recipes…</p>
-          ) : filteredRecipes.length ? (
+            <p role="status">Loading your saved recipes…</p>
+          ) : filteredRecipes.length > 0 ? (
             renderCards(filteredRecipes)
+          ) : recipes.some((recipe) =>
+              favourites.includes(recipe.id)
+            ) ? (
+            <div className="empty-state">
+              <span aria-hidden="true">🔍</span>
+              <h3>No matching favourites</h3>
+              <p>
+                Try another dish name or ingredient, or clear your search
+                to see all your saved recipes.
+              </p>
+
+              <button
+                type="button"
+                className="primary-button"
+                onClick={resetFilters}
+              >
+                Clear search and filters
+              </button>
+            </div>
           ) : (
             <EmptyState
               title="Your favourites list is waiting"
-              description="Tap the heart on a recipe to save it here."
+              description="Tap the heart on a recipe in Explore to save it here."
               onBrowse={() => goTo("Explore")}
             />
           )}
@@ -1076,9 +1178,13 @@ export default function App() {
           Boolean(
             auth.user &&
               selectedRecipe &&
-              (auth.user.role === "admin" ||
-                (selectedRecipe.userId &&
-                  selectedRecipe.userId === auth.user.id))
+              (
+                auth.user.role === "admin" ||
+                (
+                  selectedRecipe.userId &&
+                  selectedRecipe.userId === auth.user.id
+                )
+              )
           )
         }
       />
