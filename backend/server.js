@@ -2,7 +2,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { initDatabase } from './db/index.js';
+import { initDatabase, getAllRecipes, getRecipeById } from './db/index.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const rawRecipes = JSON.parse(await readFile(path.join(root, 'src/recipes.json'), 'utf8'));
@@ -23,7 +23,6 @@ export function createServer(options = {}) {
     const init = initDatabase(options);
     db = init.db;
   } catch (err) {
-    // Graceful fallback if database initialization fails
     console.error('Database initialization notice:', err.message);
   }
 
@@ -34,9 +33,16 @@ export function createServer(options = {}) {
       res.end(JSON.stringify(body));
     }
 
+    let urlObj;
+    try {
+      urlObj = new URL(req.url, 'http://localhost');
+    } catch {
+      return json(400, { message: 'Invalid URL' });
+    }
+
     let pathname;
     try {
-      pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      pathname = decodeURIComponent(urlObj.pathname);
     } catch {
       return json(400, { message: 'Invalid URL' });
     }
@@ -64,13 +70,46 @@ export function createServer(options = {}) {
     }
 
     if (pathname === '/api/recipes') {
+      if (db) {
+        try {
+          const filters = {
+            cuisine: urlObj.searchParams.get('cuisine') || 'All',
+            diet: urlObj.searchParams.get('diet') || 'All',
+            difficulty: urlObj.searchParams.get('difficulty') || 'All',
+            maxTime: urlObj.searchParams.get('maxTime') || 'All',
+            search: urlObj.searchParams.get('q') || urlObj.searchParams.get('search') || '',
+            sort: urlObj.searchParams.get('sort') || 'default'
+          };
+          const recipes = getAllRecipes(db, filters);
+          return json(200, recipes);
+        } catch (error) {
+          console.error('Recipe retrieval error:', error.message);
+        }
+      }
       return json(200, rawRecipes);
     }
 
     if (pathname.startsWith('/api/recipes/')) {
-      const id = pathname.slice('/api/recipes/'.length);
-      const item = /^\d+$/.test(id) && rawRecipes.find((r) => r.id === Number(id));
-      return item ? json(200, item) : json(404, { message: 'Recipe not found' });
+      const idStr = pathname.slice('/api/recipes/'.length);
+      if (!/^\d+$/.test(idStr)) {
+        return json(404, { message: 'Recipe not found' });
+      }
+      const id = Number(idStr);
+
+      if (db) {
+        try {
+          const item = getRecipeById(db, id);
+          if (item) {
+            return json(200, item);
+          }
+          return json(404, { message: 'Recipe not found' });
+        } catch (error) {
+          console.error('Recipe detail lookup error:', error.message);
+        }
+      }
+
+      const fallbackItem = rawRecipes.find((r) => r.id === id);
+      return fallbackItem ? json(200, fallbackItem) : json(404, { message: 'Recipe not found' });
     }
 
     if (pathname.startsWith('/api/')) {
