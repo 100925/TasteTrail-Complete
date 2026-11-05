@@ -1,0 +1,204 @@
+[
+  {
+    "id": 1,
+    "title": "Vegetable Biryani",
+    "cuisine": "Indian",
+    "category": "Vegetarian",
+    "cookingTime": 40,
+    "difficulty": "Medium",
+    "description": "A fragrant Indian rice dish with vegetables and spices.",
+    "image": "https://images.unsplash.com/photo-1589302168068-964664d93dc0",
+    "ingredients": [
+      "1 cup basmati rice",
+      "2 cups mixed vegetables",
+      "1 onion, sliced",
+      "2 tbsp oil",
+      "2 tsp biryani spice mix",
+      "1\u00be cups water",
+      "\u00bd tsp salt, adjust to taste"
+    ],
+    "instructions": [
+      "Rinse rice until the water runs clear, soak for 15 minutes, then drain.",
+      "Heat oil in a covered pot. Fry onion for 5 minutes, then stir in vegetables and biryani spices for 3 minutes.",
+      "Add drained rice, water and salt. Bring to a boil, cover and reduce heat to low.",
+      "Cook for 15 minutes until rice is tender and liquid is absorbed. Rest covered for 5 minutes, fluff and serve."
+    ],
+    "diet": "Veg"
+  },
+  {
+    "id": 2,
+    "title": "Classic Tomato Pasta",
+    "cuisine": "Italian",
+    "category": "Vegetarian",
+    "cookingTime": 25,
+    "difficulty": "Easy",
+    "description": "Pasta tossed in a delicious tomato sauce.",
+    "image": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601",
+    "ingredients": [
+      "200 g pasta",
+      "3 tomatoes, chopped",
+      "3 garlic cloves, minced",
+      "2 tbsp olive oil",
+      "\u00bd tsp salt, adjust to taste",
+      "\u00bc tsp black pepper"
+    ],
+    "instructions": [
+      "Boil pasta in salted water for the time on the packet. Reserve half a cup of cooking water before draining.",
+      "Heat olive oil and gently cook garlic for 30 seconds. Add chopped tomatoes, salt and pepper.",
+      "Simmer for 10 minutes, stirring occasionally, until the tomatoes soften into a sauce.",
+      "Toss pasta with the sauce. Add a splash of reserved water if needed and serve hot."
+    ],
+    "diet": "Veg"
+  },
+  {
+    "id": 3,
+    "title": "Masala Dosa",
+    "cuisine": "South Indian",
+    "category": "Vegetarian",
+    "cookingTime": 30,
+    "difficulty": "Medium",
+    "description": "Crispy dosa filled with spiced potato masala.",
+    "image": "https://images.unsplash.com/photo-1668236543090-82eba5ee5976",
+    "ingredients": [
+      "2 cups prepared dosa batter",
+      "2 medium potatoes",
+      "1 small onion, chopped",
+      "1 tsp mustard seeds",
+      "8 curry leaves",
+      "2 tbsp oil",
+      "\u00bc tsp turmeric",
+      "\u00bd tsp salt, adjust to taste"
+    ],
+    "instructions": [
+      "Peel and dice potatoes. Boil for 12\u201315 minutes until tender, drain and mash roughly.",
+      "Heat 1 tbsp oil. Add mustard seeds and curry leaves, then onion. Cook for 4 minutes. Stir in turmeric, salt and potatoes.",
+      "Heat a nonstick pan on medium heat. Spread a ladle of prepared batter thinly and drizzle a little oil around the edge.",
+      "Cook until golden underneath, add potato filling and fold. Repeat with remaining batter; serve with chutney."
+    ],
+    "diet": "Veg"
+  },
+  {
+    "id": 4,
+    "title": "Margherita Pizza",
+    "cuisine": "Italian",
+    "category": "Vegetarian",
+    "cookingTime": 35,
+    "difficulty": "Medium",
+    "description": "A classic pizza with tomato, cheese and basil.",
+    "image": "https://images.unsplash.com/photo-1579751626657-72bc17010498",
+    "ingredients": [
+      "1 ready-to-bake pizza base, about 25 cm",
+      "\u2153 cup tomato sauce",
+      "125 g mozzarella, torn",
+      "6 basil leaves",
+      "1 tsp olive oil"
+    ],
+    "instructions": [
+      "Preheat the oven to 220\u00b0C, or the temperature recommended on your pizza base packet.",
+      "Place the base on a baking tray and spread tomato sauce, leaving a small edge.",
+      "Add mozzarella and drizzle with olive oil. Bake for 12\u201315 minutes or until the base is crisp and the cheese bubbles.",
+      "Top with basil, rest for 2 minutes, slice and serve. Follow the base packet if its baking instructions differ."
+    ],
+    "diet": "Veg"
+  },
+  {
+    "id": 5,
+    "title": "Chocolate Brownies",
+    "cuisine": "American",
+    "category": "Dessert",
+    "cookingTime": 40,
+    "difficulty": "Easy",
+    "description": "Rich and chocolatey brownies for dessert lovers.",
+    "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c",
+    "ingredients": [
+      "100 g dark chocolate",
+      "100 g butter",
+      "150 g sugar",
+      "75 g plain flour",
+      "2 eggs"
+    ],
+    "instructions": [
+      "Preheat oven to 180\u00b0C and line a 20 cm square baking tin.",
+      "Gently melt chocolate and butter together. Let cool slightly, then stir in sugar and beat in the eggs.",
+      "Fold in flour just until combined and pour the batter into the lined tin.",
+      "Bake for 20\u201325 minutes, until a skewer has moist crumbs but no raw batter. Cool in the tin before slicing."
+    ],
+    "diet": "Contains egg"
+  },
+  {
+    "id": 6,
+    "title": "Fresh Greek Salad",
+    "cuisine": "Mediterranean",
+    "category": "Vegetarian",
+    "cookingTime": 15,
+    "difficulty": "Easy",
+    "description": "A refreshing salad with vegetables, olives and feta.",
+    "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999",
+    "ingredients": [
+      "1 cucumber, diced",
+      "2 tomatoes, chopped",
+      "\u00bc cup olives",
+      "75 g feta cheese",
+      "2 tbsp olive oil",
+      "1 tbsp lemon juice"
+    ],
+    "instructions": [
+      "Wash and chop the cucumber and tomatoes into bite-sized pieces.",
+      "Put vegetables and olives in a serving bowl.",
+      "Crumble feta over the top and drizzle with olive oil and lemon juice.",
+      "Toss gently and serve immediately, or refrigerate until serving."
+    ],
+    "diet": "Veg"
+  },
+  {
+    "id": 7,
+    "title": "Chicken Curry",
+    "cuisine": "Indian",
+    "category": "Non-Vegetarian",
+    "cookingTime": 45,
+    "difficulty": "Medium",
+    "description": "A comforting chicken curry with aromatic spices.",
+    "image": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398",
+    "ingredients": [
+      "400 g boneless chicken, diced",
+      "1 onion, chopped",
+      "2 tomatoes, chopped",
+      "1 tbsp ginger-garlic paste",
+      "2 tbsp oil",
+      "2 tsp curry spice mix",
+      "\u00bd cup water",
+      "\u00bd tsp salt, adjust to taste"
+    ],
+    "instructions": [
+      "Pat chicken dry and season with salt and half the spice mix. Wash hands and utensils after handling raw chicken.",
+      "Heat oil and cook onion for 5\u20137 minutes. Add ginger-garlic paste and stir for 1 minute.",
+      "Add tomatoes and remaining spices. Cook for 5 minutes, add chicken and water, and bring to a simmer.",
+      "Cover and simmer for about 20 minutes, stirring occasionally, until chicken reaches 74\u00b0C in the thickest piece. Serve hot with rice."
+    ],
+    "diet": "Non-Veg"
+  },
+  {
+    "id": 8,
+    "title": "Mango Smoothie",
+    "cuisine": "International",
+    "category": "Beverage",
+    "cookingTime": 5,
+    "difficulty": "Easy",
+    "description": "A creamy mango smoothie for a refreshing treat.",
+    "image": "https://images.unsplash.com/photo-1505252585461-04db1eb84625",
+    "ingredients": [
+      "1 ripe mango, peeled and diced",
+      "\u00bd cup milk",
+      "\u00bd cup plain yogurt",
+      "1 tsp honey, optional",
+      "4 ice cubes"
+    ],
+    "instructions": [
+      "Peel the mango, remove the stone and dice the flesh.",
+      "Add mango, milk and yogurt to a blender.",
+      "Add honey if desired and ice. Blend until smooth.",
+      "Pour into two glasses and serve immediately."
+    ],
+    "diet": "Veg"
+  }
+]
