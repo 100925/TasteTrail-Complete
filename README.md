@@ -42,6 +42,8 @@ TasteTrail uses Node.js standard library `node:sqlite` with automatic migrations
 - Home page, responsive navigation and animated recipe cards.
 - User accounts and authentication with secure password hashing (`scrypt`) and session tokens.
 - User registration, login, profile view, and logout modal.
+- Recipe creation, editing, and deletion with ownership permissions and dynamic ingredient/step builders.
+- "My Recipes" filter for viewing and managing personal recipe creations.
 - Persistent SQLite database with schema migrations and seed data.
 - Eight curated recipes with quantities, cooking steps and actual difficulty labels.
 - Search by dish or ingredient; cuisine and diet filters; maximum cooking time; alphabetical and quickest-first sorting.
@@ -69,8 +71,11 @@ TasteTrail uses Node.js standard library `node:sqlite` with automatic migrations
 ## API
 
 - `GET /api/health` — server status, database connection state and recipe count.
-- `GET /api/recipes` — full recipe catalogue with query filters (`cuisine`, `diet`, `difficulty`, `maxTime`, `q`, `sort`).
+- `GET /api/recipes` — full recipe catalogue with query filters (`cuisine`, `diet`, `difficulty`, `maxTime`, `userId`, `q`, `sort`).
 - `GET /api/recipes/:id` — recipe detail, or 404.
+- `POST /api/recipes` — create new recipe (requires session token).
+- `PUT /api/recipes/:id` — update recipe (requires recipe owner or admin role).
+- `DELETE /api/recipes/:id` — delete recipe (requires recipe owner or admin role).
 - `POST /api/auth/register` — create new user account (`email`, `password`, `displayName`, `bio`).
 - `POST /api/auth/login` — authenticate credentials, returns HMAC session token and user profile.
 - `GET /api/auth/me` — retrieve authenticated user profile (`Authorization: Bearer <token>`).

@@ -1,8 +1,21 @@
 import { getDatabase, createDatabaseConnection, closeDatabase, getDatabasePath } from './connection.js';
 import { runMigrations } from './migrate.js';
 import { seedDatabase } from './seed.js';
-import { getAllRecipes, getRecipeById, createRecipe, deleteRecipe } from './recipes.js';
-import { createUser, authenticateUser, findUserById, findUserByEmail, updateUserProfile } from './users.js';
+import {
+  getAllRecipes,
+  getRecipeById,
+  createRecipe,
+  updateRecipe,
+  deleteRecipe,
+  validateImageUrl
+} from './recipes.js';
+import {
+  createUser,
+  authenticateUser,
+  findUserById,
+  findUserByEmail,
+  updateUserProfile
+} from './users.js';
 
 export function initDatabase(options = {}) {
   const db = options.db || (options.dbPath ? createDatabaseConnection(options.dbPath) : getDatabase());
@@ -28,7 +41,9 @@ export {
   getAllRecipes,
   getRecipeById,
   createRecipe,
+  updateRecipe,
   deleteRecipe,
+  validateImageUrl,
   createUser,
   authenticateUser,
   findUserById,

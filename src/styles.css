@@ -1714,3 +1714,135 @@ h2 em {
   font-size: 13px;
   font-weight: 700;
 }
+
+
+/* Recipe Editor Modal & Management */
+.recipe-form-modal {
+  width: min(680px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border-radius: 20px;
+  background: var(--card, #ffffff);
+  box-shadow: 0 30px 90px #0004;
+  padding: 36px 32px;
+  animation: rise 0.25s;
+}
+
+.recipe-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.full-span {
+  grid-column: 1 / -1;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fbfcf9;
+  border: 1px solid #e5ebe1;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-header-row h3 {
+  font-size: 16px;
+  margin: 0;
+  color: #1f3b2b;
+}
+
+.dynamic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dynamic-row input,
+.dynamic-row textarea {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d8ddcd;
+  background: #fffef8;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #2e5940;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.icon-remove-btn {
+  background: none;
+  border: 0;
+  color: #a43a3a;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.icon-remove-btn:hover {
+  background: #fde8e8;
+}
+
+.form-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5ebe1;
+}
+
+.owner-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.owner-actions-row button {
+  flex: 1;
+}
+
+.create-recipe-chip {
+  background: #2e5940 !important;
+  color: #ffffff !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.create-recipe-chip:hover {
+  background: #234531 !important;
+}
