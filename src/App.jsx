@@ -27,10 +27,7 @@ import Planner from "./Planner.jsx";
 
 const foodImage = (image) => {
   if (!image) return "";
-
-  if (image.startsWith("http")) {
-    return image;
-  }
+  if (image.startsWith("http")) return image;
 
   return `https://images.unsplash.com/${image}?auto=format&fit=crop&w=800&q=85`;
 };
@@ -74,10 +71,8 @@ function RecipeCard({ recipe, saved, onSave, onOpen, onPlan }) {
       <div className="recipe-info">
         <div className="recipe-meta">
           <span>{recipe.category}</span>
-
           <span className="rating">
-            <Star size={14} fill="currentColor" />
-            {recipe.rating}
+            <Star size={14} fill="currentColor" /> {recipe.rating}
           </span>
         </div>
 
@@ -137,10 +132,7 @@ function RecipeDetails({ recipe, onClose, onPlan }) {
     dialogRef.current?.querySelector("button")?.focus();
 
     const handleKey = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-
+      if (event.key === "Escape") onClose();
       if (event.key !== "Tab") return;
 
       const items = [
@@ -184,9 +176,7 @@ function RecipeDetails({ recipe, onClose, onPlan }) {
     <div
       className="overlay"
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
+        if (e.target === e.currentTarget) onClose();
       }}
     >
       <section
@@ -216,13 +206,9 @@ function RecipeDetails({ recipe, onClose, onPlan }) {
 
         <div className="detail-content">
           <div className="recipe-meta">
-            <span>
-              {recipe.category} · {recipe.type}
-            </span>
-
+            <span>{recipe.category} · {recipe.type}</span>
             <span className="rating">
-              <Star size={14} fill="currentColor" />
-              {recipe.rating}
+              <Star size={14} fill="currentColor" /> {recipe.rating}
             </span>
           </div>
 
@@ -233,7 +219,6 @@ function RecipeDetails({ recipe, onClose, onPlan }) {
             <span>
               <Clock size={15} /> {recipe.time} minutes
             </span>
-
             <span>
               <ChefHat size={15} /> {recipe.difficulty} recipe
             </span>
@@ -331,17 +316,11 @@ function Footer({ goTo }) {
   return (
     <footer className="footer">
       <button className="brand" onClick={() => goTo("Home")}>
-        <span className="brand-icon">
-          <ChefHat />
-        </span>
-
-        <span>
-          Taste<span className="accent">Trail</span>
-        </span>
+        <span className="brand-icon"><ChefHat /></span>
+        <span>Taste<span className="accent">Trail</span></span>
       </button>
 
       <p>Made with curiosity and a little extra flavour.</p>
-
       <small>
         © 2026 TasteTrail · Recipe Discovery & Meal Planning
       </small>
@@ -377,7 +356,6 @@ export default function App() {
 
   useEffect(() => {
     const controller = new AbortController();
-
     setLoading(true);
 
     getRecipes(controller.signal)
@@ -391,15 +369,11 @@ export default function App() {
       })
       .catch((error) => {
         if (error.name !== "AbortError") {
-          setApiError(
-            "Recipes could not be loaded. Please retry."
-          );
+          setApiError("Recipes could not be loaded. Please retry.");
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
+        if (!controller.signal.aborted) setLoading(false);
       });
 
     return () => controller.abort();
@@ -423,9 +397,7 @@ export default function App() {
 
   useEffect(() => {
     if (!toast) return;
-
     const timer = setTimeout(() => setToast(""), 2400);
-
     return () => clearTimeout(timer);
   }, [toast]);
 
@@ -458,15 +430,27 @@ export default function App() {
     ]
   );
 
-  function goTo(nextPage) {
-    setPage(nextPage);
-    setMobileOpen(false);
+  const filtersAreDefault =
+    query === "" &&
+    category === "All" &&
+    type === "All" &&
+    difficulty === "All" &&
+    maxTime === "All" &&
+    sort === "default";
+
+  function resetFilters() {
     setQuery("");
     setCategory("All");
     setType("All");
     setDifficulty("All");
     setMaxTime("All");
     setSort("default");
+  }
+
+  function goTo(nextPage) {
+    setPage(nextPage);
+    setMobileOpen(false);
+    resetFilters();
 
     window.scrollTo({
       top: 0,
@@ -592,6 +576,15 @@ export default function App() {
             <option value="time">Quickest first</option>
             <option value="name">Name A–Z</option>
           </select>
+
+          <button
+            type="button"
+            className="outline-button"
+            onClick={resetFilters}
+            disabled={filtersAreDefault}
+          >
+            Reset all filters
+          </button>
         </div>
 
         <div className="category-chips">
@@ -599,9 +592,7 @@ export default function App() {
             <button
               key={item}
               className={
-                category === item
-                  ? "chip active-chip"
-                  : "chip"
+                category === item ? "chip active-chip" : "chip"
               }
               onClick={() => setCategory(item)}
             >
@@ -617,14 +608,8 @@ export default function App() {
   return (
     <div className="app">
       <header className="navbar">
-        <button
-          className="brand"
-          onClick={() => goTo("Home")}
-        >
-          <span className="brand-icon">
-            <ChefHat />
-          </span>
-
+        <button className="brand" onClick={() => goTo("Home")}>
+          <span className="brand-icon"><ChefHat /></span>
           <span>
             Taste<span className="accent">Trail</span>
             <small>DISCOVER · COOK · ENJOY</small>
@@ -642,9 +627,7 @@ export default function App() {
 
         <nav
           className={
-            mobileOpen
-              ? "nav-links nav-open"
-              : "nav-links"
+            mobileOpen ? "nav-links nav-open" : "nav-links"
           }
         >
           {["Home", "Explore", "Favourites", "Planner"].map(
@@ -670,10 +653,7 @@ export default function App() {
           )}
         </nav>
 
-        <button
-          className="surprise-button"
-          onClick={surpriseMe}
-        >
+        <button className="surprise-button" onClick={surpriseMe}>
           <Sparkles size={16} /> Surprise me
         </button>
       </header>
@@ -687,7 +667,6 @@ export default function App() {
       {apiError && (
         <div className="status-banner" role="status">
           {apiError}
-
           <button
             className="outline-button"
             disabled={loading}
@@ -707,8 +686,7 @@ export default function App() {
               </div>
 
               <h1>
-                Good food.
-                <br />
+                Good food.<br />
                 <em>Great</em> discoveries.
               </h1>
 
@@ -736,29 +714,22 @@ export default function App() {
 
               <div className="social-proof">
                 <div className="food-avatars">
-                  <span>🍋</span>
-                  <span>🥑</span>
-                  <span>🍅</span>
+                  <span>🍋</span><span>🥑</span><span>🍅</span>
                 </div>
-
                 <div>
                   <strong>Made for curious foodies</strong>
                   <small>Fresh inspiration, every day</small>
                 </div>
-
                 <span className="stars">★★★★★</span>
               </div>
             </div>
 
             <div className="hero-art">
               <img
-                src={foodImage(
-                  "photo-1547592180-85f173990554"
-                )}
+                src={foodImage("photo-1547592180-85f173990554")}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src =
-                    "/food-placeholder.svg";
+                  e.currentTarget.src = "/food-placeholder.svg";
                 }}
                 alt="Fresh colourful food bowl"
               />
@@ -769,7 +740,6 @@ export default function App() {
 
               <div className="floating-note bottom-note">
                 <span>🥗</span>
-
                 <div>
                   <strong>
                     {recipes.length} handpicked recipes
@@ -794,7 +764,6 @@ export default function App() {
                 <small>Weeknight-friendly ideas</small>
               </p>
             </div>
-
             <div>
               <span>♧</span>
               <p>
@@ -802,7 +771,6 @@ export default function App() {
                 <small>Veg, non-veg and more</small>
               </p>
             </div>
-
             <div>
               <span>♡</span>
               <p>
@@ -818,16 +786,12 @@ export default function App() {
                 <div className="eyebrow">
                   <span /> THE GOOD STUFF
                 </div>
-
                 <h2>
-                  A little inspiration
-                  <br />
+                  A little inspiration<br />
                   for <em>every appetite.</em>
                 </h2>
-
                 <p>
-                  Handpicked recipes to make your everyday
-                  delicious.
+                  Handpicked recipes to make your everyday delicious.
                 </p>
               </div>
 
@@ -844,19 +808,15 @@ export default function App() {
 
           <section className="promo-banner">
             <span className="banner-icon">✳</span>
-
             <div>
               <div className="eyebrow">
                 YOUR KITCHEN, YOUR RULES
               </div>
-
               <h2>
                 Hungry for something <em>new?</em>
               </h2>
-
               <p>
-                Let a surprise recipe choose your next
-                kitchen adventure.
+                Let a surprise recipe choose your next kitchen adventure.
               </p>
             </div>
 
@@ -876,14 +836,9 @@ export default function App() {
             <div className="eyebrow">
               <span /> FIND YOUR NEXT FAVOURITE
             </div>
-
-            <h1>
-              Explore the <em>menu.</em>
-            </h1>
-
+            <h1>Explore the <em>menu.</em></h1>
             <p>
-              Search by dish or ingredient, then follow your
-              cravings.
+              Search by dish or ingredient, then follow your cravings.
             </p>
           </div>
 
@@ -901,13 +856,7 @@ export default function App() {
             <EmptyState
               title="No recipes found"
               description="Try another search or clear your filters."
-              onBrowse={() => {
-                setQuery("");
-                setCategory("All");
-                setType("All");
-                setDifficulty("All");
-                setMaxTime("All");
-              }}
+              onBrowse={resetFilters}
             />
           )}
         </main>
@@ -919,14 +868,8 @@ export default function App() {
             <div className="eyebrow">
               <span /> YOUR PERSONAL COLLECTION
             </div>
-
-            <h1>
-              Things you <em>love.</em>
-            </h1>
-
-            <p>
-              Your saved recipes, all together in one place.
-            </p>
+            <h1>Things you <em>love.</em></h1>
+            <p>Your saved recipes, all together in one place.</p>
           </div>
 
           {loading ? (
@@ -949,14 +892,10 @@ export default function App() {
             <div className="eyebrow">
               <span /> A LITTLE PLAN GOES A LONG WAY
             </div>
-
-            <h1>
-              Your meal <em>planner.</em>
-            </h1>
-
+            <h1>Your meal <em>planner.</em></h1>
             <p>
-              Collect recipes for your next meals. Your plan
-              stays in this browser.
+              Collect recipes for your next meals.
+              Your plan stays in this browser.
             </p>
           </div>
 
@@ -980,11 +919,7 @@ export default function App() {
       />
 
       {toast && (
-        <div
-          className="toast"
-          role="status"
-          aria-live="polite"
-        >
+        <div className="toast" role="status" aria-live="polite">
           <Check size={16} /> {toast}
         </div>
       )}
