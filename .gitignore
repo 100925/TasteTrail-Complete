@@ -6,3 +6,8 @@ backend/.env
 .env.*
 !.env.example
 *.log
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+backend/data/

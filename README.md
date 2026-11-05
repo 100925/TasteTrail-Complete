@@ -1,12 +1,12 @@
 # TasteTrail — Recipe Discovery & Meal Planning
 
-A React + Vite website with a lightweight Node.js recipe API. Preserves the original TasteTrail design and completes its discovery, favourites, cooking-guide and personal meal-planning flows.
+A React + Vite website with a Node.js API and persistent SQLite database. Preserves the original TasteTrail design and completes its discovery, favourites, cooking-guide and personal meal-planning flows.
 
 ## Start on Windows / VS Code
 
 1. Extract the ZIP (do not run inside the compressed folder).
 2. Open the extracted `tastetrail-frontend` folder in VS Code.
-3. Use Node.js 22.12 or newer (your Node 26 also works).
+3. Use Node.js 22.12 or newer (Node 26 also works).
 4. Open Terminal → New Terminal and run:
 
 ```powershell
@@ -17,7 +17,7 @@ npm run dev
 5. Open **http://localhost:5173**. One command starts both the frontend and recipe API.
 6. Press Ctrl+C to stop both servers.
 
-The frontend uses port 5173 and the backend uses port 5000. Stop any earlier copies of the project if either port is already occupied. No MongoDB, API key, account or separate backend install is required.
+The frontend uses port 5173 and the backend uses port 5000. Stop any earlier copies of the project if either port is already occupied. Built-in `node:sqlite` database is automatically created, migrated and seeded on first run without requiring external database servers or native C++ compilers.
 
 ## Run the production build
 
@@ -26,27 +26,31 @@ npm run build
 npm start
 ```
 
-Open **http://localhost:5000**. The ZIP includes a verified `dist` build, so `npm start` can also run it directly with Node, even before installing frontend packages. Do not double-click `dist/index.html`; use the server.
+Open **http://localhost:5000**. The server serves the built production website and API together.
+
+## Database and Persistence
+
+TasteTrail uses Node.js standard library `node:sqlite` with automatic migrations and seeding:
+- **Zero native build dependencies**: Runs immediately on Windows without Python or Visual Studio C++ build tools.
+- **Persistent storage**: Stored by default in `backend/data/tastetrail.db`.
+- **Relational schema**: Includes users, recipes, ingredients, instructions, favourites, meal plans, shopping lists, pantry items, and reviews.
+- **In-memory mode**: Configurable with `DATABASE_PATH=:memory:` for fast, isolated test suites.
+- **Environment configuration**: See `.env.example` for environment variable options.
 
 ## Included features
 
 - Home page, responsive navigation and animated recipe cards.
+- Persistent SQLite database with schema migrations and seed data.
 - Eight curated recipes with quantities, cooking steps and actual difficulty labels.
 - Search by dish or ingredient; cuisine and diet filters; maximum cooking time; alphabetical and quickest-first sorting.
 - Egg-containing brownies correctly separated from vegetarian dishes.
 - Recipe detail dialog with ingredient checkboxes and step-by-step cooking, keyboard focus trapping and Escape to close.
 - Favourites saved in this browser, surviving refresh.
 - Planner with recipe removal, dates, meal types and a clear action.
-- Shopping checklist derived from planned meals, with checkmarks and text-file download. Quantities are per recipe, not automatically summed across dishes.
+- Shopping checklist derived from planned meals, with checkmarks and text-file download.
 - Surprise recipe selection.
 - Loading, retry and API-unavailable states. A bundled copy of the recipe catalogue keeps discovery usable when the API is unavailable.
 - Image fallback, storage-error handling and reduced-motion styling.
-
-## Data and scope
-
-This is a complete local recipe-discovery project, not a multiuser service. Recipes are curated data in `src/recipes.json`; edit that file and rebuild/restart to update the catalogue. The API is read-only. Favourites, schedules and shopping checkmarks are stored in browser localStorage, not a cloud database. Clearing browser data removes them; another browser/device has a separate collection. The same recipe appears once in the planner and can be assigned one date/meal. There is no account login, payment system or shared database.
-
-Food photos and Google Fonts need internet; fallback artwork and system fonts work without them. Initial `npm ci` needs internet. Recipe ratings are labelled “Curated” rather than presenting invented customer reviews.
 
 ## Commands
 
@@ -58,34 +62,34 @@ Food photos and Google Fonts need internet; fallback artwork and system fonts wo
 | `npm run build` | Generate `dist` |
 | `npm start` | Serve the API and built website on port 5000 |
 | `npm run preview` | Preview the build on Vite's preview port, using the bundled recipe fallback |
-| `npm test` | Run catalogue, filtering, storage and server checks; build first |
+| `npm test` | Run catalogue, filtering, storage, server and database checks; build first |
 
 ## API
 
-- `GET /api/health` — server status and recipe count.
+- `GET /api/health` — server status, database connection state and recipe count.
 - `GET /api/recipes` — full recipe catalogue.
 - `GET /api/recipes/:id` — recipe detail, or 404.
-
-Development uses Vite's same-origin API proxy. Production serves frontend and API together. The server binds to the local computer by default. `PORT` can change the production port; the default development proxy expects 5000.
 
 ## Project structure
 
 ```text
 src/                 React components, catalogue, filters and browser storage
-backend/server.js    Dependency-free Node API and production file server
+backend/             Node.js API server and SQLite database layer
+  db/                Database connection, migrations runner, seed loader
+  db/migrations/     SQL schema migration files
+  auth/              Password hashing and authentication utilities
+  server.js          Node API and production file server
 scripts/dev.mjs      Cross-platform combined development startup
 public/              Local fallback artwork
- tests/              Automated checks
+tests/               Automated checks
 vite.config.js       React plugin and API proxy
- dist/               Ready-to-run production website
+dist/                Ready-to-run production website
 ```
 
-## Changes from the uploaded project
-
-Fixed missing backend dependencies/startup, unused MongoDB connection, missing seed script, hard-coded API fetches, missing recipe memo dependency, unseen errors/loading states, mismatched cuisine filters, egg classification, hard-coded difficulty, invalid stored values, dialog keyboard handling and external-image failure states. Added dated planning, meal types, shopping list, time filters, sorting, tests, pinned dependencies and these setup instructions. Git history and node_modules are intentionally excluded from the distribution.
 ## Troubleshooting
 
 For Windows setup errors, see the [troubleshooting guide](docs/troubleshooting.md).
+
 ## Application Screenshots
 
 ### Home
@@ -96,6 +100,7 @@ For Windows setup errors, see the [troubleshooting guide](docs/troubleshooting.m
 
 ### Meal Planner
 ![TasteTrail meal planner](docs/images/planner.png)
+
 ## Contributing
 
 See the [contribution guide](CONTRIBUTING.md) for setup, testing and pull request instructions.
