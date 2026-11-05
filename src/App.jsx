@@ -17,13 +17,15 @@ import {
   Bookmark,
   X,
   Check,
-  Menu
+  Menu,
+  User
 } from "lucide-react";
 
-import { getRecipes } from "./api.js";
-import { readSaved, writeSaved } from "./storage.js";
+import { getRecipes, getCurrentUser } from "./api.js";
+import { readSaved, writeSaved, readAuth, writeAuth } from "./storage.js";
 import { filterRecipes } from "./recipe-utils.js";
 import Planner from "./Planner.jsx";
+import AuthModal from "./AuthModal.jsx";
 
 const foodImage = (image) => {
   if (!image) return "";
@@ -354,6 +356,35 @@ export default function App() {
     readSaved("tt-meal-plan")
   );
 
+  const [auth, setAuth] = useState(() => readAuth());
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (auth.token) {
+      getCurrentUser(auth.token)
+        .then((verifiedUser) => {
+          if (verifiedUser) {
+            setAuth((curr) => ({ ...curr, user: verifiedUser }));
+            writeAuth(auth.token, verifiedUser);
+          } else {
+            setAuth({ token: null, user: null });
+            writeAuth(null, null);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  function handleAuthSuccess(user, token) {
+    setAuth({ token, user });
+    writeAuth(token, user);
+  }
+
+  function handleLogout() {
+    setAuth({ token: null, user: null });
+    writeAuth(null, null);
+  }
+
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -656,6 +687,28 @@ export default function App() {
         <button className="surprise-button" onClick={surpriseMe}>
           <Sparkles size={16} /> Surprise me
         </button>
+
+        {auth.user ? (
+          <button
+            className="nav-user-btn"
+            onClick={() => setAuthModalOpen(true)}
+            aria-label={`User profile: ${auth.user.displayName}`}
+          >
+            <span className="nav-avatar-mini">
+              {auth.user.displayName ? auth.user.displayName[0].toUpperCase() : "U"}
+            </span>
+            <span>{auth.user.displayName}</span>
+          </button>
+        ) : (
+          <button
+            className="nav-auth-btn"
+            onClick={() => setAuthModalOpen(true)}
+            aria-label="Sign in or create account"
+          >
+            <User size={15} />
+            <span>Sign in</span>
+          </button>
+        )}
       </header>
 
       {loading && (
@@ -916,6 +969,15 @@ export default function App() {
         recipe={selectedRecipe}
         onClose={() => setSelectedRecipe(null)}
         onPlan={addToPlanner}
+      />
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        user={auth.user}
+        onAuthSuccess={handleAuthSuccess}
+        onLogout={handleLogout}
+        notify={setToast}
       />
 
       {toast && (

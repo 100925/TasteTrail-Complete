@@ -2,7 +2,19 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { initDatabase, getAllRecipes, getRecipeById } from './db/index.js';
+import {
+  initDatabase,
+  getAllRecipes,
+  getRecipeById,
+  createUser,
+  authenticateUser,
+  findUserById
+} from './db/index.js';
+import {
+  createSessionToken,
+  verifySessionToken,
+  extractTokenFromHeader
+} from './auth/session.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const rawRecipes = JSON.parse(await readFile(path.join(root, 'src/recipes.json'), 'utf8'));
@@ -16,6 +28,29 @@ const types = {
   '.jpg': 'image/jpeg',
   '.woff2': 'font/woff2'
 };
+
+function parseJsonBody(req, limit = 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > limit) {
+        reject(new Error('Payload too large'));
+      }
+    });
+    req.on('end', () => {
+      if (!body.trim()) {
+        return resolve({});
+      }
+      try {
+        resolve(JSON.parse(body));
+      } catch {
+        reject(new Error('Invalid JSON payload'));
+      }
+    });
+    req.on('error', reject);
+  });
+}
 
 export function createServer(options = {}) {
   let db = null;
@@ -47,6 +82,104 @@ export function createServer(options = {}) {
       return json(400, { message: 'Invalid URL' });
     }
 
+    // Auth Routes
+    if (pathname === '/api/auth/register') {
+      if (req.method !== 'POST') {
+        res.setHeader('Allow', 'POST');
+        return json(405, { message: 'Method not allowed' });
+      }
+      if (!db) {
+        return json(503, { message: 'Database service unavailable' });
+      }
+      let body;
+      try {
+        body = await parseJsonBody(req);
+      } catch (err) {
+        return json(400, { message: err.message });
+      }
+
+      try {
+        const user = createUser(db, {
+          email: body.email,
+          password: body.password,
+          displayName: body.displayName,
+          bio: body.bio
+        });
+        const token = createSessionToken(user);
+        return json(201, {
+          message: 'Account created successfully',
+          user,
+          token
+        });
+      } catch (err) {
+        return json(400, { message: err.message });
+      }
+    }
+
+    if (pathname === '/api/auth/login') {
+      if (req.method !== 'POST') {
+        res.setHeader('Allow', 'POST');
+        return json(405, { message: 'Method not allowed' });
+      }
+      if (!db) {
+        return json(503, { message: 'Database service unavailable' });
+      }
+      let body;
+      try {
+        body = await parseJsonBody(req);
+      } catch (err) {
+        return json(400, { message: err.message });
+      }
+
+      const user = authenticateUser(db, body.email, body.password);
+      if (!user) {
+        return json(401, { message: 'Invalid email or password' });
+      }
+
+      const token = createSessionToken(user);
+      return json(200, {
+        message: 'Signed in successfully',
+        user,
+        token
+      });
+    }
+
+    if (pathname === '/api/auth/me') {
+      if (!['GET', 'HEAD'].includes(req.method)) {
+        res.setHeader('Allow', 'GET, HEAD');
+        return json(405, { message: 'Method not allowed' });
+      }
+      if (!db) {
+        return json(503, { message: 'Database service unavailable' });
+      }
+
+      const token = extractTokenFromHeader(req.headers.authorization);
+      if (!token) {
+        return json(401, { message: 'Missing or invalid authorization header' });
+      }
+
+      const session = verifySessionToken(token);
+      if (!session) {
+        return json(401, { message: 'Session expired or invalid. Please sign in again.' });
+      }
+
+      const user = findUserById(db, session.userId);
+      if (!user) {
+        return json(404, { message: 'User account no longer exists' });
+      }
+
+      return json(200, { user });
+    }
+
+    if (pathname === '/api/auth/logout') {
+      if (req.method !== 'POST') {
+        res.setHeader('Allow', 'POST');
+        return json(405, { message: 'Method not allowed' });
+      }
+      return json(200, { message: 'Signed out successfully' });
+    }
+
+    // Read-only catalog routes and static assets require GET / HEAD
     if (!['GET', 'HEAD'].includes(req.method)) {
       res.setHeader('Allow', 'GET, HEAD');
       return json(405, { message: 'Method not allowed' });
