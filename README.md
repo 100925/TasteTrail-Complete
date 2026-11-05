@@ -1,6 +1,6 @@
 # TasteTrail — Recipe Discovery & Meal Planning
 
-A React + Vite website with a Node.js API and persistent SQLite database. Preserves the original TasteTrail design and completes its discovery, favourites, cooking-guide and personal meal-planning flows.
+A React + Vite website with a Node.js API and persistent SQLite database. Preserves the original TasteTrail design and completes its discovery, favourites, cooking-guide, personal meal-planning, and user authentication flows.
 
 ## Start on Windows / VS Code
 
@@ -40,6 +40,8 @@ TasteTrail uses Node.js standard library `node:sqlite` with automatic migrations
 ## Included features
 
 - Home page, responsive navigation and animated recipe cards.
+- User accounts and authentication with secure password hashing (`scrypt`) and session tokens.
+- User registration, login, profile view, and logout modal.
 - Persistent SQLite database with schema migrations and seed data.
 - Eight curated recipes with quantities, cooking steps and actual difficulty labels.
 - Search by dish or ingredient; cuisine and diet filters; maximum cooking time; alphabetical and quickest-first sorting.
@@ -62,22 +64,32 @@ TasteTrail uses Node.js standard library `node:sqlite` with automatic migrations
 | `npm run build` | Generate `dist` |
 | `npm start` | Serve the API and built website on port 5000 |
 | `npm run preview` | Preview the build on Vite's preview port, using the bundled recipe fallback |
-| `npm test` | Run catalogue, filtering, storage, server and database checks; build first |
+| `npm test` | Run catalogue, filtering, storage, server, auth and database checks; build first |
 
 ## API
 
 - `GET /api/health` — server status, database connection state and recipe count.
-- `GET /api/recipes` — full recipe catalogue.
+- `GET /api/recipes` — full recipe catalogue with query filters (`cuisine`, `diet`, `difficulty`, `maxTime`, `q`, `sort`).
 - `GET /api/recipes/:id` — recipe detail, or 404.
+- `POST /api/auth/register` — create new user account (`email`, `password`, `displayName`, `bio`).
+- `POST /api/auth/login` — authenticate credentials, returns HMAC session token and user profile.
+- `GET /api/auth/me` — retrieve authenticated user profile (`Authorization: Bearer <token>`).
+- `POST /api/auth/logout` — terminate session.
+
+## Demo Accounts
+
+Pre-seeded accounts for testing and evaluation:
+- **Demo Foodie**: `demo@tastetrail.com` / `DemoPassword123!`
+- **Admin**: `admin@tastetrail.com` / `AdminPassword123!`
 
 ## Project structure
 
 ```text
-src/                 React components, catalogue, filters and browser storage
+src/                 React components, catalogue, filters, auth modal and storage
 backend/             Node.js API server and SQLite database layer
-  db/                Database connection, migrations runner, seed loader
+  auth/              Password hashing, verification, and session token management
+  db/                Database connection, migrations runner, seed loader, queries
   db/migrations/     SQL schema migration files
-  auth/              Password hashing and authentication utilities
   server.js          Node API and production file server
 scripts/dev.mjs      Cross-platform combined development startup
 public/              Local fallback artwork
