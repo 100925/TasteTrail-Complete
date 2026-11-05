@@ -83,3 +83,6 @@ vite.config.js       React plugin and API proxy
 ## Changes from the uploaded project
 
 Fixed missing backend dependencies/startup, unused MongoDB connection, missing seed script, hard-coded API fetches, missing recipe memo dependency, unseen errors/loading states, mismatched cuisine filters, egg classification, hard-coded difficulty, invalid stored values, dialog keyboard handling and external-image failure states. Added dated planning, meal types, shopping list, time filters, sorting, tests, pinned dependencies and these setup instructions. Git history and node_modules are intentionally excluded from the distribution.
+## Troubleshooting
+
+For Windows setup errors, see the [troubleshooting guide](docs/troubleshooting.md).
