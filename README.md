@@ -96,3 +96,6 @@ For Windows setup errors, see the [troubleshooting guide](docs/troubleshooting.m
 
 ### Meal Planner
 ![TasteTrail meal planner](docs/images/planner.png)
+## Contributing
+
+See the [contribution guide](CONTRIBUTING.md) for setup, testing and pull request instructions.
