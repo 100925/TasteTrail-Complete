@@ -1,3 +1,12 @@
+export function validateImageUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:text/html')) {
+    return '';
+  }
+  return trimmed;
+}
+
 export function getAllRecipes(db, filters = {}) {
   const conditions = [];
   const params = [];
@@ -15,6 +24,11 @@ export function getAllRecipes(db, filters = {}) {
   if (filters.difficulty && filters.difficulty !== 'All') {
     conditions.push('difficulty = ?');
     params.push(filters.difficulty);
+  }
+
+  if (filters.userId) {
+    conditions.push('user_id = ?');
+    params.push(Number(filters.userId));
   }
 
   if (filters.maxTime && filters.maxTime !== 'All') {
@@ -47,6 +61,8 @@ export function getAllRecipes(db, filters = {}) {
     sql += ' ORDER BY cooking_time ASC, title ASC';
   } else if (filters.sort === 'name') {
     sql += ' ORDER BY title ASC';
+  } else if (filters.sort === 'newest') {
+    sql += ' ORDER BY created_at DESC, id DESC';
   } else {
     sql += ' ORDER BY id ASC';
   }
@@ -94,6 +110,7 @@ export function getAllRecipes(db, filters = {}) {
     servings: r.servings || 4,
     description: r.description,
     image: r.image || '',
+    userId: r.user_id,
     isCurated: Boolean(r.is_curated),
     ingredients: ingredientsByRecipe.get(r.id) || [],
     instructions: instructionsByRecipe.get(r.id) || []
@@ -132,6 +149,7 @@ export function getRecipeById(db, id) {
     servings: row.servings || 4,
     description: row.description,
     image: row.image || '',
+    userId: row.user_id,
     isCurated: Boolean(row.is_curated),
     ingredients,
     instructions
@@ -142,6 +160,9 @@ export function createRecipe(db, data, userId = null) {
   if (!data.title || typeof data.title !== 'string') {
     throw new Error('Recipe title is required');
   }
+  if (data.title.trim().length < 2) {
+    throw new Error('Recipe title must be at least 2 characters long');
+  }
   if (!data.cuisine || typeof data.cuisine !== 'string') {
     throw new Error('Recipe cuisine is required');
   }
@@ -150,16 +171,18 @@ export function createRecipe(db, data, userId = null) {
   }
   const cookingTime = Number(data.cookingTime || data.cooking_time);
   if (isNaN(cookingTime) || cookingTime <= 0) {
-    throw new Error('Cooking time must be a positive number');
+    throw new Error('Cooking time must be a positive number of minutes');
   }
-  const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [];
+  const ingredients = Array.isArray(data.ingredients) ? data.ingredients.filter((i) => typeof i === 'string' && i.trim()) : [];
   if (ingredients.length === 0) {
     throw new Error('At least one ingredient is required');
   }
-  const instructions = Array.isArray(data.instructions) ? data.instructions : [];
+  const instructions = Array.isArray(data.instructions) ? data.instructions.filter((i) => typeof i === 'string' && i.trim()) : [];
   if (instructions.length === 0) {
     throw new Error('At least one instruction step is required');
   }
+
+  const image = validateImageUrl(data.image);
 
   const insertRecipe = db.prepare(`
     INSERT INTO recipes (title, cuisine, diet, cooking_time, prep_time, difficulty, servings, description, image, user_id, is_curated)
@@ -187,18 +210,18 @@ export function createRecipe(db, data, userId = null) {
       data.difficulty || 'Medium',
       Number(data.servings || 4),
       data.description ? data.description.trim() : '',
-      data.image ? data.image.trim() : '',
+      image,
       userId
     );
     const recipeId = res.lastInsertRowid;
 
     ingredients.forEach((ing, index) => {
-      const text = typeof ing === 'string' ? ing.trim() : String(ing);
+      const text = ing.trim();
       insertIngredient.run(recipeId, text, 1, 'item', text, index);
     });
 
     instructions.forEach((inst, index) => {
-      const text = typeof inst === 'string' ? inst.trim() : String(inst);
+      const text = inst.trim();
       insertInstruction.run(recipeId, index + 1, text);
     });
 
@@ -210,11 +233,101 @@ export function createRecipe(db, data, userId = null) {
   }
 }
 
-export function deleteRecipe(db, id) {
+export function updateRecipe(db, id, data, userId = null, role = 'user') {
+  const numericId = Number(id);
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    throw new Error('Invalid recipe ID');
+  }
+
+  const existing = db.prepare('SELECT * FROM recipes WHERE id = ?').get(numericId);
+  if (!existing) {
+    throw new Error('Recipe not found');
+  }
+
+  if (role !== 'admin' && existing.user_id !== userId) {
+    throw new Error('You do not have permission to edit this recipe');
+  }
+
+  if (data.title !== undefined && (!data.title || data.title.trim().length < 2)) {
+    throw new Error('Recipe title must be at least 2 characters long');
+  }
+  const cookingTime = data.cookingTime !== undefined ? Number(data.cookingTime) : existing.cooking_time;
+  if (isNaN(cookingTime) || cookingTime <= 0) {
+    throw new Error('Cooking time must be a positive number of minutes');
+  }
+
+  const title = data.title !== undefined ? data.title.trim() : existing.title;
+  const cuisine = data.cuisine !== undefined ? data.cuisine.trim() : existing.cuisine;
+  const diet = data.diet !== undefined ? data.diet.trim() : existing.diet;
+  const difficulty = data.difficulty !== undefined ? data.difficulty : existing.difficulty;
+  const prepTime = data.prepTime !== undefined ? Number(data.prepTime) : existing.prep_time;
+  const servings = data.servings !== undefined ? Number(data.servings) : existing.servings;
+  const description = data.description !== undefined ? data.description.trim() : existing.description;
+  const image = data.image !== undefined ? validateImageUrl(data.image) : existing.image;
+
+  db.exec('BEGIN TRANSACTION;');
+  try {
+    db.prepare(`
+      UPDATE recipes
+      SET title = ?, cuisine = ?, diet = ?, cooking_time = ?, prep_time = ?, difficulty = ?, servings = ?, description = ?, image = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).run(title, cuisine, diet, cookingTime, prepTime, difficulty, servings, description, image, numericId);
+
+    if (Array.isArray(data.ingredients) && data.ingredients.length > 0) {
+      db.prepare('DELETE FROM recipe_ingredients WHERE recipe_id = ?').run(numericId);
+      const insertIngredient = db.prepare(`
+        INSERT INTO recipe_ingredients (recipe_id, item, quantity, unit, raw_text, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+      data.ingredients.forEach((ing, index) => {
+        const text = String(ing).trim();
+        if (text) {
+          insertIngredient.run(numericId, text, 1, 'item', text, index);
+        }
+      });
+    }
+
+    if (Array.isArray(data.instructions) && data.instructions.length > 0) {
+      db.prepare('DELETE FROM recipe_instructions WHERE recipe_id = ?').run(numericId);
+      const insertInstruction = db.prepare(`
+        INSERT INTO recipe_instructions (recipe_id, step_number, instruction)
+        VALUES (?, ?, ?)
+      `);
+      data.instructions.forEach((inst, index) => {
+        const text = String(inst).trim();
+        if (text) {
+          insertInstruction.run(numericId, index + 1, text);
+        }
+      });
+    }
+
+    db.exec('COMMIT;');
+    return getRecipeById(db, numericId);
+  } catch (err) {
+    db.exec('ROLLBACK;');
+    throw err;
+  }
+}
+
+export function deleteRecipe(db, id, userId = null, role = 'user') {
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) {
     return false;
   }
+
+  const existing = db.prepare('SELECT * FROM recipes WHERE id = ?').get(numericId);
+  if (!existing) {
+    return false;
+  }
+
+  if (existing.is_curated === 1 && role !== 'admin') {
+    throw new Error('Curated recipes cannot be deleted');
+  }
+
+  if (role !== 'admin' && existing.user_id !== userId) {
+    throw new Error('You do not have permission to delete this recipe');
+  }
+
   const res = db.prepare('DELETE FROM recipes WHERE id = ?').run(numericId);
   return res.changes > 0;
 }

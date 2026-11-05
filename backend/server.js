@@ -6,6 +6,9 @@ import {
   initDatabase,
   getAllRecipes,
   getRecipeById,
+  createRecipe,
+  updateRecipe,
+  deleteRecipe,
   createUser,
   authenticateUser,
   findUserById
@@ -50,6 +53,12 @@ function parseJsonBody(req, limit = 1024 * 1024) {
     });
     req.on('error', reject);
   });
+}
+
+function getSessionUser(req) {
+  const token = extractTokenFromHeader(req.headers.authorization);
+  if (!token) return null;
+  return verifySessionToken(token);
 }
 
 export function createServer(options = {}) {
@@ -153,14 +162,9 @@ export function createServer(options = {}) {
         return json(503, { message: 'Database service unavailable' });
       }
 
-      const token = extractTokenFromHeader(req.headers.authorization);
-      if (!token) {
-        return json(401, { message: 'Missing or invalid authorization header' });
-      }
-
-      const session = verifySessionToken(token);
+      const session = getSessionUser(req);
       if (!session) {
-        return json(401, { message: 'Session expired or invalid. Please sign in again.' });
+        return json(401, { message: 'Missing, invalid or expired authorization token' });
       }
 
       const user = findUserById(db, session.userId);
@@ -177,6 +181,96 @@ export function createServer(options = {}) {
         return json(405, { message: 'Method not allowed' });
       }
       return json(200, { message: 'Signed out successfully' });
+    }
+
+    // Recipe CRUD endpoints
+    if (pathname === '/api/recipes' && req.method === 'POST') {
+      if (!req.headers.authorization) {
+        res.setHeader('Allow', 'GET, HEAD');
+        return json(405, { message: 'Method not allowed' });
+      }
+      if (!db) {
+        return json(503, { message: 'Database service unavailable' });
+      }
+
+      const session = getSessionUser(req);
+      if (!session) {
+        return json(401, { message: 'Valid authorization required to create recipes' });
+      }
+
+      let body;
+      try {
+        body = await parseJsonBody(req);
+      } catch (err) {
+        return json(400, { message: err.message });
+      }
+
+      try {
+        const newRecipe = createRecipe(db, body, session.userId);
+        return json(201, {
+          message: 'Recipe created successfully',
+          recipe: newRecipe
+        });
+      } catch (err) {
+        return json(400, { message: err.message });
+      }
+    }
+
+    if (pathname.startsWith('/api/recipes/') && (req.method === 'PUT' || req.method === 'DELETE')) {
+      const idStr = pathname.slice('/api/recipes/'.length);
+      if (!/^\d+$/.test(idStr)) {
+        return json(404, { message: 'Recipe not found' });
+      }
+      const id = Number(idStr);
+
+      if (!db) {
+        return json(503, { message: 'Database service unavailable' });
+      }
+
+      const session = getSessionUser(req);
+      if (!session) {
+        return json(401, { message: 'Authentication required for this operation' });
+      }
+
+      if (req.method === 'PUT') {
+        let body;
+        try {
+          body = await parseJsonBody(req);
+        } catch (err) {
+          return json(400, { message: err.message });
+        }
+
+        try {
+          const updated = updateRecipe(db, id, body, session.userId, session.role);
+          return json(200, {
+            message: 'Recipe updated successfully',
+            recipe: updated
+          });
+        } catch (err) {
+          if (err.message === 'Recipe not found') {
+            return json(404, { message: err.message });
+          }
+          if (err.message.includes('permission')) {
+            return json(403, { message: err.message });
+          }
+          return json(400, { message: err.message });
+        }
+      }
+
+      if (req.method === 'DELETE') {
+        try {
+          const success = deleteRecipe(db, id, session.userId, session.role);
+          if (!success) {
+            return json(404, { message: 'Recipe not found' });
+          }
+          return json(200, { message: 'Recipe deleted successfully' });
+        } catch (err) {
+          if (err.message.includes('permission') || err.message.includes('Curated')) {
+            return json(403, { message: err.message });
+          }
+          return json(400, { message: err.message });
+        }
+      }
     }
 
     // Read-only catalog routes and static assets require GET / HEAD
@@ -210,6 +304,7 @@ export function createServer(options = {}) {
             diet: urlObj.searchParams.get('diet') || 'All',
             difficulty: urlObj.searchParams.get('difficulty') || 'All',
             maxTime: urlObj.searchParams.get('maxTime') || 'All',
+            userId: urlObj.searchParams.get('userId') || null,
             search: urlObj.searchParams.get('q') || urlObj.searchParams.get('search') || '',
             sort: urlObj.searchParams.get('sort') || 'default'
           };

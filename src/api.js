@@ -76,3 +76,50 @@ export async function logoutUser() {
     // Ignore network failure on logout
   }
 }
+
+
+export async function createRecipeApi(recipeData, token) {
+  const response = await fetch(`${API_BASE_URL}/recipes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(recipeData)
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to create recipe');
+  }
+  return normalizeRecipe(data.recipe);
+}
+
+export async function updateRecipeApi(id, recipeData, token) {
+  const response = await fetch(`${API_BASE_URL}/recipes/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(recipeData)
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to update recipe');
+  }
+  return normalizeRecipe(data.recipe);
+}
+
+export async function deleteRecipeApi(id, token) {
+  const response = await fetch(`${API_BASE_URL}/recipes/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to delete recipe');
+  }
+  return data;
+}

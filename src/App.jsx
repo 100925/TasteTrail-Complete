@@ -18,14 +18,18 @@ import {
   X,
   Check,
   Menu,
-  User
+  User,
+  Plus,
+  Edit3,
+  Trash2
 } from "lucide-react";
 
-import { getRecipes, getCurrentUser } from "./api.js";
+import { getRecipes, getCurrentUser, deleteRecipeApi } from "./api.js";
 import { readSaved, writeSaved, readAuth, writeAuth } from "./storage.js";
 import { filterRecipes } from "./recipe-utils.js";
 import Planner from "./Planner.jsx";
 import AuthModal from "./AuthModal.jsx";
+import RecipeFormModal from "./RecipeFormModal.jsx";
 
 const foodImage = (image) => {
   if (!image) return "";
@@ -119,7 +123,7 @@ function RecipeCard({ recipe, saved, onSave, onOpen, onPlan }) {
   );
 }
 
-function RecipeDetails({ recipe, onClose, onPlan }) {
+function RecipeDetails({ recipe, onClose, onPlan, onEdit, onDelete, canManage }) {
   const dialogRef = useRef(null);
   const [step, setStep] = useState(0);
   const [checked, setChecked] = useState([]);
@@ -288,6 +292,25 @@ function RecipeDetails({ recipe, onClose, onPlan }) {
             </div>
           </div>
 
+          {canManage && (
+            <div className="owner-actions-row">
+              <button
+                type="button"
+                className="outline-button"
+                onClick={() => onEdit(recipe)}
+              >
+                <Edit3 size={15} /> Edit Recipe
+              </button>
+              <button
+                type="button"
+                className="remove-button"
+                onClick={() => onDelete(recipe)}
+              >
+                <Trash2 size={15} /> Delete Recipe
+              </button>
+            </div>
+          )}
+
           <button
             className="primary-button full-button"
             onClick={() => onPlan(recipe)}
@@ -383,6 +406,58 @@ export default function App() {
   function handleLogout() {
     setAuth({ token: null, user: null });
     writeAuth(null, null);
+    setMyRecipesOnly(false);
+  }
+
+  const [recipeFormOpen, setRecipeFormOpen] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState(null);
+  const [myRecipesOnly, setMyRecipesOnly] = useState(false);
+
+  function handleOpenCreateRecipe() {
+    if (!auth.user) {
+      setAuthModalOpen(true);
+      setToast("Please sign in to add your own recipes.");
+      return;
+    }
+    setEditingRecipe(null);
+    setRecipeFormOpen(true);
+  }
+
+  function handleOpenEditRecipe(recipe) {
+    setEditingRecipe(recipe);
+    setRecipeFormOpen(true);
+  }
+
+  function handleRecipeSaved(savedRecipe, action) {
+    if (action === "create") {
+      setRecipes((prev) => [savedRecipe, ...prev]);
+    } else {
+      setRecipes((prev) =>
+        prev.map((r) => (r.id === savedRecipe.id ? savedRecipe : r))
+      );
+      if (selectedRecipe?.id === savedRecipe.id) {
+        setSelectedRecipe(savedRecipe);
+      }
+    }
+  }
+
+  async function handleDeleteRecipe(recipe) {
+    if (!auth.token) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${recipe.name}"?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteRecipeApi(recipe.id, auth.token);
+      setRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
+      if (selectedRecipe?.id === recipe.id) {
+        setSelectedRecipe(null);
+      }
+      setToast(`Deleted "${recipe.name}"`);
+    } catch (err) {
+      setToast(err.message || "Failed to delete recipe");
+    }
   }
 
   useEffect(() => {
@@ -437,29 +512,33 @@ export default function App() {
     ...new Set(recipes.map((recipe) => recipe.category))
   ];
 
-  const filteredRecipes = useMemo(
-    () =>
-      filterRecipes(recipes, {
-        query,
-        category,
-        type,
-        difficulty,
-        maxTime,
-        sort,
-        favourites: page === "Favourites" ? favourites : null
-      }),
-    [
-      recipes,
-      page,
-      favourites,
+  const filteredRecipes = useMemo(() => {
+    let list = filterRecipes(recipes, {
+      query,
       category,
       type,
       difficulty,
-      query,
       maxTime,
-      sort
-    ]
-  );
+      sort,
+      favourites: page === "Favourites" ? favourites : null
+    });
+    if (myRecipesOnly && auth.user) {
+      list = list.filter((r) => r.userId === auth.user.id);
+    }
+    return list;
+  }, [
+    recipes,
+    page,
+    favourites,
+    category,
+    type,
+    difficulty,
+    query,
+    maxTime,
+    sort,
+    myRecipesOnly,
+    auth.user
+  ]);
 
   const filtersAreDefault =
     query === "" &&
@@ -467,7 +546,8 @@ export default function App() {
     type === "All" &&
     difficulty === "All" &&
     maxTime === "All" &&
-    sort === "default";
+    sort === "default" &&
+    !myRecipesOnly;
 
   function resetFilters() {
     setQuery("");
@@ -476,6 +556,7 @@ export default function App() {
     setDifficulty("All");
     setMaxTime("All");
     setSort("default");
+    setMyRecipesOnly(false);
   }
 
   function goTo(nextPage) {
@@ -619,18 +700,38 @@ export default function App() {
         </div>
 
         <div className="category-chips">
+          {auth.user && (
+            <button
+              className={myRecipesOnly ? "chip active-chip" : "chip"}
+              onClick={() => setMyRecipesOnly((prev) => !prev)}
+            >
+              <ChefHat size={14} /> My Recipes
+            </button>
+          )}
+
           {categories.map((item) => (
             <button
               key={item}
               className={
-                category === item ? "chip active-chip" : "chip"
+                category === item && !myRecipesOnly ? "chip active-chip" : "chip"
               }
-              onClick={() => setCategory(item)}
+              onClick={() => {
+                setCategory(item);
+                setMyRecipesOnly(false);
+              }}
             >
               {item === "Healthy" && <Leaf size={14} />}
               {item}
             </button>
           ))}
+
+          <button
+            className="chip create-recipe-chip"
+            onClick={handleOpenCreateRecipe}
+            title="Create a new recipe"
+          >
+            <Plus size={14} /> Add Recipe
+          </button>
         </div>
       </>
     );
@@ -969,6 +1070,17 @@ export default function App() {
         recipe={selectedRecipe}
         onClose={() => setSelectedRecipe(null)}
         onPlan={addToPlanner}
+        onEdit={handleOpenEditRecipe}
+        onDelete={handleDeleteRecipe}
+        canManage={
+          Boolean(
+            auth.user &&
+              selectedRecipe &&
+              (auth.user.role === "admin" ||
+                (selectedRecipe.userId &&
+                  selectedRecipe.userId === auth.user.id))
+          )
+        }
       />
 
       <AuthModal
@@ -977,6 +1089,15 @@ export default function App() {
         user={auth.user}
         onAuthSuccess={handleAuthSuccess}
         onLogout={handleLogout}
+        notify={setToast}
+      />
+
+      <RecipeFormModal
+        isOpen={recipeFormOpen}
+        onClose={() => setRecipeFormOpen(false)}
+        initialRecipe={editingRecipe}
+        token={auth.token}
+        onSaved={handleRecipeSaved}
         notify={setToast}
       />
 
