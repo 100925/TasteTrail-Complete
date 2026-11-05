@@ -86,3 +86,13 @@ Fixed missing backend dependencies/startup, unused MongoDB connection, missing s
 ## Troubleshooting
 
 For Windows setup errors, see the [troubleshooting guide](docs/troubleshooting.md).
+## Application Screenshots
+
+### Home
+![TasteTrail home page](docs/images/home.png)
+
+### Explore Recipes
+![TasteTrail recipe discovery page](docs/images/explore.png)
+
+### Meal Planner
+![TasteTrail meal planner](docs/images/planner.png)
