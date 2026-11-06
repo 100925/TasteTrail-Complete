@@ -223,13 +223,13 @@ export function createServer(options = {}) {
       }
       const id = Number(idStr);
 
-      if (!db) {
-        return json(503, { message: 'Database service unavailable' });
-      }
-
       const session = getSessionUser(req);
       if (!session) {
         return json(401, { message: 'Authentication required for this operation' });
+      }
+
+      if (!db) {
+        return json(503, { message: 'Database service unavailable' });
       }
 
       if (req.method === 'PUT') {
