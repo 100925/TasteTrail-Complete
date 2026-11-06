@@ -280,6 +280,7 @@ export function createServer(options = {}) {
     }
 
     if (pathname === '/api/health') {
+      res.setHeader('Cache-Control', 'no-store');
       let dbStatus = 'disconnected';
       let count = rawRecipes.length;
       if (db) {
